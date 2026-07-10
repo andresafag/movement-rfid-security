@@ -1,8 +1,10 @@
 #include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "movement-driver.h"
 
-void app_main(void) 
+void app_main(void)
 {
-    // Call your initialization function here
-    init_movement_sensor(); 
+    // Initialize PIR sensor and create the rfid_trigger_sem semaphore
+    init_movement_sensor();
 }
