@@ -1,20 +1,14 @@
 name: Trigger Workflows
 
-    on:
-      push:
-        branches: [ main ]
+on:
+  push:
+    branches:
+      - main
 
-    jobs:
-      trigger-workflows:
-        runs-on: ubuntu-latest
-        steps:
-          - name: Run tests workflow
-            uses: ./.github/workflows/tests.yml
-            id: tests-step
-      
-          - name: Wait for tests to finish
-            needs: tests-step
+jobs:
+  trigger-tests:
+    uses: ./.github/workflows/tests.yml
 
-          - name: Run terraform workflow
-            uses: ./.github/workflows/terraform.yml
-    
+  trigger-terraform:
+    needs: trigger-tests
+    uses: ./.github/workflows/terraform.yml

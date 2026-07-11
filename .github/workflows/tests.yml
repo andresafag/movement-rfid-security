@@ -1,17 +1,17 @@
 on:
   workflow_call:
-	workflow_dispatch:
+  workflow_dispatch:
 
 concurrency:
-	group: tests-${{ github.ref }}
-	cancel-in-progress: true
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
-	contents: read
+  contents: read
 
 jobs:
   # =========================================================================
-  # 1. Host unit tests — no ESP32, no AWS.  Fast feedback loop.
+  # 1. Host unit tests — no ESP32, no AWS. Fast feedback loop.
   # =========================================================================
   host-unit:
     name: 🧪 Host unit tests

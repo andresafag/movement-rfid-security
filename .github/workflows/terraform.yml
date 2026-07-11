@@ -1,4 +1,5 @@
 name: Terraform
+
 on:
   workflow_call:
     inputs:
@@ -47,8 +48,8 @@ env:
 
 jobs:
   # =========================================================================
-  # init — always runs first.  Bootstraps the backend, downloads providers,
-  # validates configuration.  Other jobs reuse its cache via actions/cache.
+  # init — always runs first. Bootstraps the backend, downloads providers,
+  # validates configuration. Other jobs reuse its cache via actions/cache.
   # =========================================================================
   init:
     name: 🔧 init
@@ -102,6 +103,7 @@ jobs:
         uses: terraform-linters/setup-tflint@v4
         with:
           tflint_version: latest
+
       - name: 🔎 tflint
         working-directory: infrastructure
         run: |
@@ -117,7 +119,7 @@ jobs:
             terraform-${{ runner.os }}-
 
   # =========================================================================
-  # plan — runs on every PR and every push, never applies.  Uploads the
+  # plan — runs on every PR and every push, never applies. Uploads the
   # binary plan as an artifact so reviewers can inspect it locally.
   # =========================================================================
   plan:
@@ -173,7 +175,7 @@ jobs:
 
   # =========================================================================
   # apply — runs only on push to main (auto-apply dev) or via
-  # workflow_dispatch with action=apply.  Production requires the
+  # workflow_dispatch with action=apply. Production requires the
   # GitHub Environment `prod` with required reviewers.
   # =========================================================================
   apply:
