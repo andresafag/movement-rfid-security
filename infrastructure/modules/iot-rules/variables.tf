@@ -13,8 +13,8 @@ variable "topic_prefix" {
   type        = string
 }
 
-variable "dynamodb_table_name" {
-  description = "Name of the DynamoDB table to write sensor data into"
+variable "sns_topic_arn" {
+  description = "ARN of the SNS topic to publish sensor notifications to"
   type        = string
 }
 

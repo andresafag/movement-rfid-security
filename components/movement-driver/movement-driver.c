@@ -80,9 +80,9 @@ void init_movement_sensor(void) {
     io_conf.mode = GPIO_MODE_OUTPUT;
     io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     io_conf.intr_type = GPIO_INTR_DISABLE;
-    gpio_config(&io_conf); // FIXED: Configuration successfully applied to the hardware registers
+    gpio_config(&io_conf);
 
-    // Hardware Assurance Flash: Turns on for 0.5s on boot to verify LED circuit integrity
+    
     gpio_set_level(BLUE_LED_PIN, 1);
     vTaskDelay(pdMS_TO_TICKS(500));
     gpio_set_level(BLUE_LED_PIN, 0);
@@ -96,12 +96,4 @@ void init_movement_sensor(void) {
     ESP_LOGI(TAG, "PIR Sensor initialized successfully. Awaiting movement...");
 }
 
-// Global entry point stub (Add this or copy its structure to your main.c file)
-void app_main(void) {
-    init_movement_sensor();
 
-    // Loop forever to keep the FreeRTOS scheduler from discarding this thread
-    while (1) {
-        vTaskDelay(pdMS_TO_TICKS(1000));
-    }
-}

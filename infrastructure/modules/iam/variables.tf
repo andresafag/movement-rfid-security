@@ -8,7 +8,7 @@ variable "environment" {
   type        = string
 }
 
-variable "dynamodb_table_arn" {
-  description = "ARN of the DynamoDB table the IoT rule engine will write to"
+variable "sns_topic_arn" {
+  description = "ARN of the SNS topic the IoT rule engine will publish to"
   type        = string
 }

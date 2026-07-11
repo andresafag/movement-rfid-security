@@ -49,18 +49,18 @@ output "device_cert_secret_arn" {
 }
 
 # ── Data pipeline ───────────────────────────────────────────────────────
-output "dynamodb_table_name" {
-  description = "Name of the DynamoDB sensor data table"
-  value       = module.dynamodb.table_name
+output "sns_topic_arn" {
+  description = "ARN of the SNS topic receiving sensor notifications"
+  value       = module.sns.topic_arn
 }
 
-output "dynamodb_table_arn" {
-  description = "ARN of the DynamoDB sensor data table"
-  value       = module.dynamodb.table_arn
+output "sns_topic_name" {
+  description = "Name of the SNS topic receiving sensor notifications"
+  value       = module.sns.topic_name
 }
 
 output "iot_rule_name" {
-  description = "Name of the IoT topic rule routing MQTT to DynamoDB"
+  description = "Name of the IoT topic rule routing MQTT to SNS"
   value       = module.iot_rules.rule_name
 }
 

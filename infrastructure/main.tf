@@ -9,7 +9,7 @@
 #   5. terraform apply                                 (full stack)
 #
 # Module dependency order:
-#   s3-state → vpc → dynamodb → iam → iot-core → iot-rules
+#   s3-state → vpc → sns → iam → iot-core → iot-rules
 ###############################################################################
 
 # ── 1. Remote state backend (bootstrap first) ──────────────────────────
@@ -34,22 +34,22 @@ module "vpc" {
   availability_zones   = var.availability_zones
 }
 
-# ── 3. DynamoDB sensor data table ─────────────────────────────────────
-module "dynamodb" {
-  source = "./modules/dynamodb"
+# ── 3. SNS topic for sensor notifications ─────────────────────────────
+module "sns" {
+  source = "./modules/sns"
 
-  project_name = var.project_name
-  environment  = var.environment
-  billing_mode = var.dynamodb_billing_mode
+  project_name      = var.project_name
+  environment       = var.environment
+  subscriber_emails = var.sns_subscriber_emails
 }
 
 # ── 4. IAM role + policies for IoT Rules Engine ───────────────────────
 module "iam" {
   source = "./modules/iam"
 
-  project_name       = var.project_name
-  environment        = var.environment
-  dynamodb_table_arn = module.dynamodb.table_arn
+  project_name  = var.project_name
+  environment   = var.environment
+  sns_topic_arn = module.sns.topic_arn
 }
 
 # ── 5. IoT Core (thing, cert, policy, Secrets Manager) ────────────────
@@ -63,13 +63,13 @@ module "iot_core" {
   topic_prefix = var.iot_topic_prefix
 }
 
-# ── 6. IoT Topic Rule (MQTT → DynamoDB data pipeline) ─────────────────
+# ── 6. IoT Topic Rule (MQTT → SNS notification) ───────────────────────
 module "iot_rules" {
   source = "./modules/iot-rules"
 
-  project_name        = var.project_name
-  environment         = var.environment
-  topic_prefix        = var.iot_topic_prefix
-  dynamodb_table_name = module.dynamodb.table_name
-  iot_rule_role_arn   = module.iam.iot_rule_engine_role_arn
+  project_name      = var.project_name
+  environment       = var.environment
+  topic_prefix      = var.iot_topic_prefix
+  sns_topic_arn     = module.sns.topic_arn
+  iot_rule_role_arn = module.iam.iot_rule_engine_role_arn
 }

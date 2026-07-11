@@ -4,7 +4,7 @@ locals {
 
 # ── IoT Rule Engine Role ───────────────────────────────────────────────────────
 # This role is assumed by the AWS IoT Rules Engine (not a user or device)
-# to write sensor data into DynamoDB.
+# to publish sensor notifications to SNS.
 
 data "aws_iam_policy_document" "iot_assume_role" {
   statement {
@@ -22,37 +22,34 @@ data "aws_iam_policy_document" "iot_assume_role" {
 resource "aws_iam_role" "iot_rule_engine" {
   name               = "${local.name_prefix}-iot-rule-engine-role"
   assume_role_policy = data.aws_iam_policy_document.iot_assume_role.json
-  description        = "Role assumed by IoT Rules Engine to write to DynamoDB"
+  description        = "Role assumed by IoT Rules Engine to publish to SNS"
 
   tags = {
     Name = "${local.name_prefix}-iot-rule-engine-role"
   }
 }
 
-# ── DynamoDB Write Policy ─────────────────────────────────────────────────────
-# Least-privilege: only PutItem on the specific sensor data table.
+# ── SNS Publish Policy ────────────────────────────────────────────────────────
+# Least-privilege: only Publish on the specific sensor alerts topic.
 
-data "aws_iam_policy_document" "dynamodb_write" {
+data "aws_iam_policy_document" "sns_publish" {
   statement {
-    sid    = "AllowDynamoDBPutItem"
-    effect = "Allow"
-    actions = [
-      "dynamodb:PutItem",
-      "dynamodb:UpdateItem",
-    ]
-    resources = [var.dynamodb_table_arn]
+    sid       = "AllowSNSPublish"
+    effect    = "Allow"
+    actions   = ["sns:Publish"]
+    resources = [var.sns_topic_arn]
   }
 }
 
-resource "aws_iam_policy" "dynamodb_write" {
-  name        = "${local.name_prefix}-iot-dynamodb-write"
-  description = "Allows IoT Rules Engine to write sensor data to DynamoDB"
-  policy      = data.aws_iam_policy_document.dynamodb_write.json
+resource "aws_iam_policy" "sns_publish" {
+  name        = "${local.name_prefix}-iot-sns-publish"
+  description = "Allows IoT Rules Engine to publish sensor notifications to SNS"
+  policy      = data.aws_iam_policy_document.sns_publish.json
 }
 
-resource "aws_iam_role_policy_attachment" "iot_dynamodb" {
+resource "aws_iam_role_policy_attachment" "iot_sns" {
   role       = aws_iam_role.iot_rule_engine.name
-  policy_arn = aws_iam_policy.dynamodb_write.arn
+  policy_arn = aws_iam_policy.sns_publish.arn
 }
 
 # ── CloudWatch Logs Policy ────────────────────────────────────────────────────

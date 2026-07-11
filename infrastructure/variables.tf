@@ -61,12 +61,14 @@ variable "iot_topic_prefix" {
   default     = "sensors/motion"
 }
 
-# ── DynamoDB ──────────────────────────────────────────────────────────────────
+# ── SNS ───────────────────────────────────────────────────────────────────────
 
-variable "dynamodb_billing_mode" {
-  description = "DynamoDB billing mode: PAY_PER_REQUEST or PROVISIONED"
-  type        = string
-  default     = "PAY_PER_REQUEST"
+variable "sns_subscriber_emails" {
+  description = "Email addresses that will receive sensor notifications via SNS"
+  type        = list(string)
+  default = [
+    "andresfelipeacostagarcia34@gmail.com",
+  ]
 }
 
 # ── State backend ─────────────────────────────────────────────────────────────
@@ -75,5 +77,5 @@ variable "state_bucket_name" {
   description = "Globally unique S3 bucket name for Terraform remote state"
   type        = string
   # Override in terraform.tfvars — must be globally unique
-  default     = ""
+  default = "movement-sensor-tfstate"
 }

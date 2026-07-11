@@ -20,8 +20,8 @@ resource "aws_iot_thing_type" "sensor" {
   name = "${local.name_prefix}-motion-sensor"
 
   properties {
-    description            = "ESP32 PIR motion sensor device"
-    searchable_attributes  = ["project", "environment"]
+    description           = "ESP32 PIR motion sensor device"
+    searchable_attributes = ["project", "environment"]
   }
 }
 
@@ -47,8 +47,8 @@ resource "aws_iot_thing_principal_attachment" "device" {
 data "aws_iam_policy_document" "iot_device_policy" {
   # Allow the device to connect using only its thing name as client ID
   statement {
-    sid    = "AllowConnect"
-    effect = "Allow"
+    sid     = "AllowConnect"
+    effect  = "Allow"
     actions = ["iot:Connect"]
     resources = [
       "arn:aws:iot:${var.aws_region}:${data.aws_caller_identity.current.account_id}:client/${var.thing_name}"
@@ -57,8 +57,8 @@ data "aws_iam_policy_document" "iot_device_policy" {
 
   # Allow publish only to the device's own topic subtree
   statement {
-    sid    = "AllowPublish"
-    effect = "Allow"
+    sid     = "AllowPublish"
+    effect  = "Allow"
     actions = ["iot:Publish", "iot:RetainPublish"]
     resources = [
       "arn:aws:iot:${var.aws_region}:${data.aws_caller_identity.current.account_id}:topic/${var.topic_prefix}/*"
@@ -67,8 +67,8 @@ data "aws_iam_policy_document" "iot_device_policy" {
 
   # Allow subscribe + receive on the device's command topic (cloud → device)
   statement {
-    sid    = "AllowSubscribe"
-    effect = "Allow"
+    sid     = "AllowSubscribe"
+    effect  = "Allow"
     actions = ["iot:Subscribe"]
     resources = [
       "arn:aws:iot:${var.aws_region}:${data.aws_caller_identity.current.account_id}:topicfilter/${var.topic_prefix}/*"
@@ -76,8 +76,8 @@ data "aws_iam_policy_document" "iot_device_policy" {
   }
 
   statement {
-    sid    = "AllowReceive"
-    effect = "Allow"
+    sid     = "AllowReceive"
+    effect  = "Allow"
     actions = ["iot:Receive"]
     resources = [
       "arn:aws:iot:${var.aws_region}:${data.aws_caller_identity.current.account_id}:topic/${var.topic_prefix}/*"
