@@ -7,11 +7,11 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(CHECK REQUIRED check)
 
-# 🚀 SOLUCIÓN LNK1104: Forzar a CMake a encontrar la ruta absoluta del archivo .lib
-# Buscamos 'check', 'libcheck' o 'libcheckstatic' en los directorios que conoce vcpkg/pkgconfig
+# 🚀 SOLUCIÓN DEFINITIVA: Buscar en las rutas raíz que provee vcpkg (CMAKE_PREFIX_PATH)
 find_library(CHECK_ABSOLUTE_LIBRARY
     NAMES check libcheck libcheckstatic
-    PATHS ${CHECK_EXT_LIBRARY_DIRS} ${CHECK_LIBRARY_DIRS}
+    PATHS ${CMAKE_PREFIX_PATH}
+    PATH_SUFFIXES lib
     REQUIRED
 )
 message(STATUS "Found Check absolute library path: ${CHECK_ABSOLUTE_LIBRARY}")
@@ -39,7 +39,6 @@ add_executable(test_movement_driver
     ../../components/movement-driver/movement-driver.c
 )
 
-# Vinculamos usando la ruta absoluta encontrada
 target_link_libraries(test_movement_driver PRIVATE host_stubs ${CHECK_ABSOLUTE_LIBRARY})
 target_include_directories(test_movement_driver PRIVATE ${CHECK_INCLUDE_DIRS})
 
@@ -57,7 +56,6 @@ add_executable(test_mqtt_aws
     ../../components/mqtt-aws/mqtt-aws.c
 )
 
-# Vinculamos usando la ruta absoluta encontrada
 target_link_libraries(test_mqtt_aws PRIVATE host_stubs ${CHECK_ABSOLUTE_LIBRARY})
 target_include_directories(test_mqtt_aws PRIVATE ${CHECK_INCLUDE_DIRS})
 
@@ -76,7 +74,6 @@ add_executable(test_sensor_pipeline
     ../../components/mqtt-aws/mqtt-aws.c
 )
 
-# Vinculamos usando la ruta absoluta encontrada
 target_link_libraries(test_sensor_pipeline PRIVATE host_stubs ${CHECK_ABSOLUTE_LIBRARY})
 target_include_directories(test_sensor_pipeline PRIVATE ${CHECK_INCLUDE_DIRS})
 
