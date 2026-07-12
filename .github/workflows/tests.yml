@@ -63,8 +63,8 @@ jobs:
         shell: pwsh
         run: |
           cmake -S tests/host -B tests/host/build `
-            -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake" `
-            --building-for="Visual Studio 18 2026"
+            -G "Visual Studio 18 2026" `
+            -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
 
       - name: 🏗️ Build tests
         run: cmake --build tests/host/build --config Debug -j 2
