@@ -7,6 +7,15 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(CHECK REQUIRED check)
 
+# 🚀 SOLUCIÓN LNK1104: Forzar a CMake a encontrar la ruta absoluta del archivo .lib
+# Buscamos 'check', 'libcheck' o 'libcheckstatic' en los directorios que conoce vcpkg/pkgconfig
+find_library(CHECK_ABSOLUTE_LIBRARY
+    NAMES check libcheck libcheckstatic
+    PATHS ${CHECK_EXT_LIBRARY_DIRS} ${CHECK_LIBRARY_DIRS}
+    REQUIRED
+)
+message(STATUS "Found Check absolute library path: ${CHECK_ABSOLUTE_LIBRARY}")
+
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/stubs
@@ -30,10 +39,9 @@ add_executable(test_movement_driver
     ../../components/movement-driver/movement-driver.c
 )
 
-target_link_libraries(test_movement_driver PRIVATE host_stubs ${CHECK_LIBRARIES})
+# Vinculamos usando la ruta absoluta encontrada
+target_link_libraries(test_movement_driver PRIVATE host_stubs ${CHECK_ABSOLUTE_LIBRARY})
 target_include_directories(test_movement_driver PRIVATE ${CHECK_INCLUDE_DIRS})
-# Agrega la ruta física de las librerías encontradas por PkgConfig (Soluciona LNK1104)
-target_link_directories(test_movement_driver PRIVATE ${CHECK_LIBRARY_DIRS})
 
 if(NOT MSVC)
     target_compile_options(test_movement_driver PRIVATE ${CHECK_CFLAGS_OTHER})
@@ -49,10 +57,9 @@ add_executable(test_mqtt_aws
     ../../components/mqtt-aws/mqtt-aws.c
 )
 
-target_link_libraries(test_mqtt_aws PRIVATE host_stubs ${CHECK_LIBRARIES})
+# Vinculamos usando la ruta absoluta encontrada
+target_link_libraries(test_mqtt_aws PRIVATE host_stubs ${CHECK_ABSOLUTE_LIBRARY})
 target_include_directories(test_mqtt_aws PRIVATE ${CHECK_INCLUDE_DIRS})
-# Agrega la ruta física de las librerías encontradas por PkgConfig (Soluciona LNK1104)
-target_link_directories(test_mqtt_aws PRIVATE ${CHECK_LIBRARY_DIRS})
 
 if(NOT MSVC)
     target_compile_options(test_mqtt_aws PRIVATE ${CHECK_CFLAGS_OTHER})
@@ -69,10 +76,9 @@ add_executable(test_sensor_pipeline
     ../../components/mqtt-aws/mqtt-aws.c
 )
 
-target_link_libraries(test_sensor_pipeline PRIVATE host_stubs ${CHECK_LIBRARIES})
+# Vinculamos usando la ruta absoluta encontrada
+target_link_libraries(test_sensor_pipeline PRIVATE host_stubs ${CHECK_ABSOLUTE_LIBRARY})
 target_include_directories(test_sensor_pipeline PRIVATE ${CHECK_INCLUDE_DIRS})
-# Agrega la ruta física de las librerías encontradas por PkgConfig (Soluciona LNK1104)
-target_link_directories(test_sensor_pipeline PRIVATE ${CHECK_LIBRARY_DIRS})
 
 if(NOT MSVC)
     target_compile_options(test_sensor_pipeline PRIVATE ${CHECK_CFLAGS_OTHER})
