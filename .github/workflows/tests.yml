@@ -152,10 +152,19 @@ jobs:
 
       - name: 🏗️ Build tests (Windows)
         if: matrix.os == 'windows-latest'
-        # Using forward slashes to avoid YAML escaping issues
-        env:
-          LIB: "${{ env.USERPROFILE }}/vcpkg/installed/x64-windows/lib;${{ env.LIB }}"
-        run: cmake --build tests/host/build --config Debug -j 2
+        run: |
+          # 1️⃣ Forzamos a CMake a leer el nuevo CMakeLists.txt antes de compilar
+          $vcpkgRoot = "$env:USERPROFILE\vcpkg"
+          $pkgConfigExe = Join-Path $vcpkgRoot 'installed' 'x64-windows' 'tools' 'pkgconf' 'pkgconf.exe'
+          $env:PKG_CONFIG_PATH = Join-Path $vcpkgRoot 'installed' 'x64-windows' 'lib' 'pkgconfig'
+          $toolchain = Join-Path $vcpkgRoot 'scripts' 'buildsystems' 'vcpkg.cmake'
+          
+          Write-Host "Reconfigurando CMake con los nuevos cambios..."
+          cmake -S tests/host -B tests/host/build -G "Visual Studio 18 2026" -DCMAKE_BUILD_TYPE=Debug -DPKG_CONFIG_EXECUTABLE=$pkgConfigExe -DCMAKE_TOOLCHAIN_FILE=$toolchain
+          
+          # 2️⃣ Ejecutamos la compilación limpia
+          Write-Host "Compilando..."
+          cmake --build tests/host/build --config Debug -j 2
 
       # -------------------------------------------------
       # 6️⃣ Run tests
