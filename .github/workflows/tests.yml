@@ -36,10 +36,9 @@ jobs:
 
       - name: 🧹 clang-format check Windows
         if: matrix.os == 'windows-latest'
+        shell: pwsh
         run: |
-          C:\msys64\usr\bin\pacman.exe -Syu --noconfirm
-          C:\msys64\usr\bin\pacman.exe -S --noconfirm mingw-w64-x86_64-check mingw-w64-x86_64-pkgconf
-          "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          vcpkg install check:x64-windows
 
       - name: 🐛 cppcheck
         if: matrix.os == 'ubuntu-latest'
@@ -61,8 +60,9 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          $env:PKG_CONFIG_PATH = "C:\msys64\mingw64\lib\pkgconfig"
-          cmake -S tests/host -B tests/host/build -G "Visual Studio 18 2026"
+          cmake -S tests/host -B tests/host/build `
+            -G "Visual Studio 18 2026" `
+            -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
 
       - name: 🏗️ Build tests
         run: cmake --build tests/host/build --config Debug -j 2
