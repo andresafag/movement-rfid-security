@@ -58,21 +58,16 @@ jobs:
 
           # ---- Install Check and pkgconf (static libs) for x64-windows ----
           Write-Host "Installing Check and pkgconf via vcpkg..."
-          & "$vcpkgRoot\vcpkg.exe" install check:x64-windows pkgconf:x64-window
+          & "$vcpkgRoot\vcpkg.exe" install check:x64-windows pkgconf:x64-windows
 
-          # ---- Verify that the tool‑chain file exists ----
+          # ---- Verify that the toolchain file exists ----
           $toolchain = Join-Path $vcpkgRoot 'scripts/buildsystems/vcpkg.cmake'
           if (-not (Test-Path $toolchain)) {
-            Write-Error "❌ vcpkg tool‑chain file not found at $toolchain"
+            Write-Error "❌ vcpkg toolchain file not found at $toolchain"
             exit 1
           }
-  
-          )
 
-          Write-Host "Configuring CMake with args: $cmakeArgs"
-          cmake @cmakeArgs
-
-          # ---- Integrate installed packages (so that find_package works without toolchain file) ----
+          # ---- Integrate installed packages ----
           Write-Host "Integrating vcpkg packages..."
           & "$vcpkgRoot\vcpkg.exe" integrate install
 
