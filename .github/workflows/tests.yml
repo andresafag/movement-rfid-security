@@ -40,7 +40,7 @@ jobs:
           Set-ExecutionPolicy Bypass -Scope Process -Force
           [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          choco install pkgconfiglite --no-progress --allow-empty-checksums -y
+          choco install msys2 -y
 
       - name: 🐛 cppcheck
         if: matrix.os == 'ubuntu-latest'
@@ -62,9 +62,8 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          cmake -S tests/host -B tests/host/build `
-            -G "Visual Studio 18 2026" `
-            -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+          $env:PKG_CONFIG_PATH = "C:\msys64\mingw64\lib\pkgconfig"
+          cmake -S tests/host -B tests/host/build -G "Visual Studio 18 2026"
 
       - name: 🏗️ Build tests
         run: cmake --build tests/host/build --config Debug -j 2
