@@ -147,6 +147,7 @@ jobs:
         env:
           LIB: "${{ env.USERPROFILE }}/vcpkg/installed/x64-windows/lib;${{ env.LIB }}"
         run: cmake --build tests/host/build --config Debug -j 2
+        
 
       - name: Analyze Pipeline Failure with AI
         if: failure() && github.event_name == 'pull_request'
