@@ -33,13 +33,15 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq clang-format check
           find components main tests/host \( -name '*.c' -o -name '*.h' \) -exec clang-format -i {} +
+
       - name: 🧹 clang-format check Windows
         if: matrix.os == 'windows-latest'
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
           [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
           $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-          choco install pkgconfiglite --no-progress -y
+          choco install pkgconf -y
+
       - name: 🐛 cppcheck
         if: matrix.os == 'ubuntu-latest'
         run: |
