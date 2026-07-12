@@ -37,8 +37,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           Set-ExecutionPolicy Bypass -Scope Process -Force
-          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-          iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org'))
+          iwr https://chocolatey.org -UseBasicParsing | iex
           $env:Path += ";$env:ALLUSERSPROFILE\chocolatey\bin"
           choco install pkgconfiglite --no-progress -y
       - name: 🐛 cppcheck
