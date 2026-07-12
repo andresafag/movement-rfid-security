@@ -1,3 +1,5 @@
+name: Tests
+
 on:
   workflow_call:
   workflow_dispatch:
@@ -46,8 +48,8 @@ jobs:
       - name: 🛠️ Configure CMake
         run: |
           cmake -S tests/host -B tests/host/build \
-		  -DCMAKE_BUILD_TYPE=Debug \
-		  --debugger --debugger-pipe /tmp/cmake-debug.pipeg
+            -DCMAKE_BUILD_TYPE=Debug \
+            --debugger --debugger-pipe /tmp/cmake-debug.pipeg
 
       - name: 🏗️ Build tests
         run: cmake --build tests/host/build --config Debug -j 2

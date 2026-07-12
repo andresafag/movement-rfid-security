@@ -55,8 +55,6 @@ jobs:
     name: 🔧 init
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    outputs:
-      tf-version: ${{ steps.tf-version.outputs.version }}
     steps:
       - name: 📥 Check out
         uses: actions/checkout@v4
