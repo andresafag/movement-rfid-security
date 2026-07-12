@@ -12,9 +12,6 @@ permissions:
   contents: read
 
 jobs:
-  # =========================================================================
-  # 1. Host unit tests — no ESP32, no AWS. Fast feedback loop.
-  # =========================================================================
   host-unit:
     name: 🧪 Host unit tests
     runs-on: ${{ matrix.os }}
@@ -27,18 +24,46 @@ jobs:
       - name: 📥 Check out
         uses: actions/checkout@v4
 
-      - name: 🧹 clang-format check Ubuntu
+      # -------------------------------------------------
+      # 1️⃣ Install dependencies (common to both OSes)
+      # -------------------------------------------------
+      - name: 🛠️ Install Ubuntu deps
         if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq clang-format check
+          sudo apt-get install -y -qq \
+            clang-format \
+            check \
+            cppcheck \
+            pkg-config \
+            cmake
+
+      - name: 🛠️ Install Windows deps
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          # vcpkg must be bootstrapped once per runner
+          if (-not (Test-Path "$env:USERPROFILE\vcpkg\bootstrap.vcpkg.exe")) {
+            git clone https://github.com/microsoft/vcpkg.git "$env:USERPROFILE\vcpkg"
+            & "$env:USERPROFILE\vcpkg\bootstrap-vcpkg.bat"
+          }
+          # Install Check (static library) for the x64-windows triplet
+          & "$env:USERPROFILE\vcpkg\vcpkg.exe" install check:x64-windows
+
+      # -------------------------------------------------
+      # 2️⃣ (Ubuntu only) Run clang‑format & cppcheck
+      # -------------------------------------------------
+      - name: 🧹 clang-format check Ubuntu
+        if: matrix.os == 'ubuntu-latest'
+        run: |
           find components main tests/host \( -name '*.c' -o -name '*.h' \) -exec clang-format -i {} +
 
       - name: 🧹 clang-format check Windows
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          vcpkg install check:x64-windows
+          # No extra action needed – vcpkg already installed Check above
+          # (you can keep your existing clang‑format step here if you wish)
 
       - name: 🐛 cppcheck
         if: matrix.os == 'ubuntu-latest'
@@ -49,31 +74,48 @@ jobs:
                    --suppress=missingIncludeSystem \
                    components main
 
-      - name: 🛠️ Configure CMake
+      # -------------------------------------------------
+      # 3️⃣ Configure CMake
+      # -------------------------------------------------
+      - name: 🛠️ Configure CMake (Linux)
         if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           cmake -S tests/host -B tests/host/build \
-            -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_FLAGS="-Wno-unknown-warning-option"   # silences -pthread warning on GCC/Clang (harmless)
 
-      - name: 🛠️ Configure CMake pwsh
+      - name: 🛠️ Configure CMake (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          choco install pkgconfiglite --no-progress --allow-empty-checksums -y
-          vcpkg install check:x64-windows
-          $env:LIB = "C:\vcpkg\installed\x64-windows\lib;" + $env:LIB
+          # Point CMake at the vcpkg triplet we just installed
+          $vcpkgRoot = "$env:USERPROFILE\vcpkg"
+          $toolchain = Join-Path $vcpkgRoot 'scripts/buildsystems/vcpkg.cmake'
+
           cmake -S tests/host -B tests/host/build `
             -G "Visual Studio 18 2026" `
-            -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+            -DCMAKE_BUILD_TYPE=Debug `
+            -DCMAKE_TOOLCHAIN_FILE=$toolchain `
+            -DVCPKG_TARGET_TRIPLET=x64-windows `
+            -DCMAKE_C_FLAGS="/wd4005"   # optional: silence macro redefinition warnings from vcpkg headers
 
+      # -------------------------------------------------
+      # 4️⃣ Build
+      # -------------------------------------------------
       - name: 🏗️ Build tests
         run: cmake --build tests/host/build --config Debug -j 2
 
+      # -------------------------------------------------
+      # 5️⃣ Test
+      # -------------------------------------------------
       - name: ▶️ Run ctest
         working-directory: tests/host/build
         run: ctest --output-on-failure --verbose
 
+      # -------------------------------------------------
+      # 6️⃣ Upload logs (unchanged)
+      # -------------------------------------------------
       - name: 📤 Upload test logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -82,6 +124,7 @@ jobs:
           path: tests/host/build/Testing/**/*.log
           if-no-files-found: ignore
           retention-days: 7
+
 
   # =========================================================================
   # 2. ESP-IDF component tests — real RTOS + GPIO driver in QEMU.
