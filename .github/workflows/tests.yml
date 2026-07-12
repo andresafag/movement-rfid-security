@@ -148,6 +148,58 @@ jobs:
           LIB: "${{ env.USERPROFILE }}/vcpkg/installed/x64-windows/lib;${{ env.LIB }}"
         run: cmake --build tests/host/build --config Debug -j 2
 
+      - name: Analyze Pipeline Failure with AI
+        if: failure() && github.event_name == 'pull_request'
+        env:
+          OPENAI_API_KEY: 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
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Fetching recent workflow logs..."
+          
+          # 1. Download the current run logs using the GitHub CLI
+          gh run view ${{ github.run_id }} --log-failed > failed_logs.txt
+          
+          # 2. Truncate logs if they are too long (keep the last 200 lines to avoid token limits)
+          tail -n 200 failed_logs.txt > optimized_logs.txt
+          
+          # 3. Create the prompt for the AI
+          cat << 'EOF' > prompt.json
+          {
+            "contents": [{
+              "parts": [{
+                "text": "You are a DevOps expert. Analyze these GitHub Actions failure logs. Identify exactly why the build failed and provide the precise code or configuration fix needed to resolve it. Keep your answer concise and format code snippets clearly.\n\nLOGS:\n"
+              }]
+            }]
+          }
+          EOF
+          
+          # Escape the logs to safely embed them into the JSON payload
+          ESCAPED_LOGS=$(jq -Rs '.' optimized_logs.txt)
+          jq --argjson logs "$ESCAPED_LOGS" '.contents[0].parts[0].text += $logs' prompt.json > payload.json
+          
+          echo "Querying Gemini API for a correction..."
+          
+          # 4. Call the free Gemini API
+          RESPONSE=$(curl -s -X POST \
+            "https://googleapis.com{GEMINI_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d @payload.json)
+          
+          # Extract the text markdown response
+          AI_ANALYSIS=$(echo "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // "AI could not generate a response. Please check API limits."')
+          
+          # 5. Format the markdown comment for the Pull Request
+          COMMENT_BODY=$(cat << EOF
+          ## 🤖 AI Pipeline Correction Analysis
+          The pipeline failed. Here is the automated diagnostic:
+          
+          $AI_ANALYSIS
+          EOF
+          )
+          
+          # 6. Post the comment directly to the Pull Request using GitHub CLI
+          gh pr comment ${{ github.event.pull_request.number }} --body "$COMMENT_BODY"
+
       # -------------------------------------------------
       # 6️⃣ Run tests
       # -------------------------------------------------
