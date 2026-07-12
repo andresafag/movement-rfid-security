@@ -1,12 +1,12 @@
-#include "stub_freertos.h"
+#include "include/stub_freertos.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
 HostRtosCounters g_host_rtos;
 
-static TaskFunction_t s_last_task_body       = NULL;
-static BaseType_t     s_task_create_return   = pdPASS;
+TaskFunction_t s_last_task_body       = NULL;
+BaseType_t     s_task_create_return   = pdPASS;
 
 void host_rtos_reset(void) {
 	memset(&g_host_rtos, 0, sizeof(g_host_rtos));

@@ -1,29 +1,6 @@
 /*
  * Fake FreeRTOS implementation for host-based unit tests.
- *
- * Implements just enough of the FreeRTOS API surface that movement-driver.c
- * can be compiled and run on a host (Linux/macOS/Windows) without an
- * RTOS scheduler.  The intent is to verify the *logic* of the driver
- * (state transitions, queue usage, debounce timing) — not real-time
- * behaviour.
  */
- // Inside stub_freertos.h (near the top)
- #ifndef pdTRUE
- #define pdTRUE  1
- #endif
-
- #ifndef pdFALSE
- #define pdFALSE 0
- #endif
-
- #ifndef pdPASS
- #define pdPASS  1
- #endif
-
- #ifndef pdFAIL
- #define pdFAIL  0
- #endif
-
 #ifndef HOST_STUB_FREERTOS_H
 #define HOST_STUB_FREERTOS_H
 
@@ -36,11 +13,13 @@ typedef uint32_t TickType_t;
 #define pdMS_TO_TICKS(ms) ((TickType_t)(ms))
 #define portMAX_DELAY    ((TickType_t)0xFFFFFFFFu)
 
-/* Return values for queue operations. */
-typedef enum {
-	pdPASS = 0,
-	pdFAIL = 1,
-} BaseType_t;
+/* FreeRTOS Return Values & Types (Matching the RTOS standard definitions) */
+typedef int32_t BaseType_t;
+
+#define pdTRUE  1
+#define pdFALSE 0
+#define pdPASS  1
+#define pdFAIL  0
 
 /* Opaque handle types — we tag them with the kind we use. */
 typedef struct HostQueue HostQueue_t;
@@ -81,6 +60,10 @@ extern HostRtosCounters g_host_rtos;
 /* Task function signature (mirrors the FreeRTOS TaskFunction_t). */
 typedef void (*TaskFunction_t)(void *);
 
+/* Declare the global tracking variables for the inline functions below */
+extern TaskFunction_t s_last_task_body;
+extern BaseType_t     s_task_create_return;
+
 /* Test hooks — let tests inject events into the ISR-to-task path. */
 void       host_rtos_reset(void);
 QueueHandle_t host_queue_create(size_t length, size_t item_size);
@@ -97,8 +80,6 @@ void          host_task_set_create_return(BaseType_t rv);
  * FreeRTOS API surface — the names the driver calls.
  * ---------------------------------------------------------------------------*/
 
-/* xQueueCreate is a macro in FreeRTOS that picks the correct backend
- * (queue.c) — we just route it to our host implementation. */
 static inline QueueHandle_t xQueueCreate(UBaseType_t uxQueueLength, UBaseType_t uxItemSize) {
 	return host_queue_create(uxQueueLength, uxItemSize);
 }
