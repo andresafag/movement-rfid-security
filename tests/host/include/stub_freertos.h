@@ -7,6 +7,22 @@
  * (state transitions, queue usage, debounce timing) — not real-time
  * behaviour.
  */
+ // Inside stub_freertos.h (near the top)
+ #ifndef pdTRUE
+ #define pdTRUE  1
+ #endif
+
+ #ifndef pdFALSE
+ #define pdFALSE 0
+ #endif
+
+ #ifndef pdPASS
+ #define pdPASS  1
+ #endif
+
+ #ifndef pdFAIL
+ #define pdFAIL  0
+ #endif
 
 #ifndef HOST_STUB_FREERTOS_H
 #define HOST_STUB_FREERTOS_H
