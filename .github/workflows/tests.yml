@@ -75,7 +75,7 @@ jobs:
           & "$vcpkgRoot\vcpkg.exe" integrate install
 
       # -------------------------------------------------
-      # 3️⃣ (Ubuntu only) clang‑format & cppcheck
+      # 3️⃣ (Ubuntu only) clang-format & cppcheck
       # -------------------------------------------------
       - name: 🧹 clang-format check Ubuntu
         if: matrix.os == 'ubuntu-latest'
@@ -113,11 +113,22 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
-          # No explicit tool‑chain file needed – vcpkg integration makes find_package work
+          $vcpkgRoot = "$env:USERPROFILE\vcpkg"
+          $pkgConfigExe = Join-Path $vcpkgRoot 'installed\x64-windows\tools\pkgconf\pkgconf.exe'
+          
+          # Verify pkgconf.exe exists
+          if (-not (Test-Path $pkgConfigExe)) {
+            Write-Error "❌ pkgconf.exe not found at $pkgConfigExe"
+            exit 1
+          }
+          
+          Write-Host "Using pkgconf at: $pkgConfigExe"
+          
           cmake -S tests/host -B tests/host/build `
             -G "Visual Studio 18 2026" `
             -DCMAKE_BUILD_TYPE=Debug `
-            -DCMAKE_C_FLAGS="/wd4005"   # suppress harmless -pthread warning on MSVC
+            -DCMAKE_C_FLAGS="/wd4005" `
+            -DPKG_CONFIG_EXECUTABLE=$pkgConfigExe
 
       # -------------------------------------------------
       # 5️⃣ Build tests
@@ -128,7 +139,7 @@ jobs:
 
       - name: 🏗️ Build tests (Windows)
         if: matrix.os == 'windows-latest'
-        
+        # NOTE: Backslashes are escaped for YAML (\\\\) – you can also use forward slashes.
         env:
           LIB: "${{ env.USERPROFILE }}\\vcpkg\\installed\\x64-windows\\lib;${{ env.LIB }}"
         run: cmake --build tests/host/build --config Debug -j 2
@@ -151,7 +162,6 @@ jobs:
           path: tests/host/build/Testing/**/*.log
           if-no-files-found: ignore
           retention-days: 7
-
 
 
   # =========================================================================
