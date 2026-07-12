@@ -132,9 +132,8 @@ jobs:
       # 4️⃣ Build
       # -------------------------------------------------
       - name: 🏗️ Build tests
-        # Prepend the vcpkg lib directory to the LIB environment variable for MSVC link.exe
         env:
-          LIB: "${{ env.USERPROFILE }}\vcpkg\installed\x64-windows\lib;${{ env.LIB }}"
+          LIB: "${{ env.USERPROFILE }}\vcpkg\installed\x64-windows\lib;${{ env.LIB }}
         run: cmake --build tests/host/build --config Debug -j 2
 
       # -------------------------------------------------
