@@ -3,9 +3,7 @@ build/
 sdkconfig.old
 
 # Host test build output
-tests/host/build/
-tests/component/*/build/
-tests/integration/build/
+dependencies.lock
 
 # QEMU emulator temp files
 *.qemu

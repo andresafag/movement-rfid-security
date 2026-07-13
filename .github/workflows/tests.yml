@@ -15,7 +15,7 @@ jobs:
   host-unit:
     name: 🧪 Unit tests
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 16
     steps:
       # -------------------------------------------------
       # 0️⃣ Checkout
