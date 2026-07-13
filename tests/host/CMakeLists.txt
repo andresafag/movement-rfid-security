@@ -5,23 +5,27 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # ==========================================
-# Configuración Unificada de dependencias (Windows y Linux)
+# Configuración Unificada de dependencias
 # ==========================================
-find_package(PkgConfig REQUIRED)
-
-# Usamos pkg_check_modules de forma normal para ambos sistemas operativos
-pkg_check_modules(CHECK REQUIRED check)
-
-# Definimos la variable de librerías según el sistema
 if(WIN32)
-    # En Windows, vcpkg con pkg-config define CHECK_LIBRARIES con las rutas completas
-    set(CHECK_LIBS ${CHECK_LIBRARIES})
+    # 1. En Windows usamos find_library para obtener la ruta absoluta exacta de check.lib
+    # Buscamos dentro de la carpeta donde vcpkg instaló el paquete
+    find_library(CHECK_LIB_PATH 
+        NAMES check
+        PATHS "$ENV{VCPKG_ROOT_DIR}/installed/x64-windows/lib"
+        REQUIRED
+    )
+    set(CHECK_LIBS "${CHECK_LIB_PATH}")
+    set(CHECK_INCLUDE_DIRS "$ENV{VCPKG_ROOT_DIR}/installed/x64-windows/include")
 else()
-    # En Linux mantenemos tu solución estática original (que incluye subunit y m)
+    # 2. En Linux seguimos usando pkg-config sin alteraciones
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(CHECK REQUIRED check)
     set(CHECK_LIBS ${CHECK_STATIC_LIBRARIES})
 endif()
 
 include_directories(
+    ${CHECK_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/stubs
     ${CMAKE_CURRENT_SOURCE_DIR}/../../components/movement-driver/include
@@ -44,10 +48,7 @@ add_executable(test_movement_driver
     ../../components/movement-driver/movement-driver.c
 )
 
-# 🚀 SOLUCIÓN: Agregamos target_link_directories para que Visual Studio sepa DÓNDE buscar la librería
-target_link_directories(test_movement_driver PRIVATE ${CHECK_LIBRARY_DIRS})
 target_link_libraries(test_movement_driver PRIVATE host_stubs ${CHECK_LIBS})
-target_include_directories(test_movement_driver PRIVATE ${CHECK_INCLUDE_DIRS})
 
 if(NOT MSVC)
     target_compile_options(test_movement_driver PRIVATE ${CHECK_CFLAGS_OTHER})
@@ -63,10 +64,7 @@ add_executable(test_mqtt_aws
     ../../components/mqtt-aws/mqtt-aws.c
 )
 
-# 🚀 SOLUCIÓN: Agregamos target_link_directories para que Visual Studio sepa DÓNDE buscar la librería
-target_link_directories(test_mqtt_aws PRIVATE ${CHECK_LIBRARY_DIRS})
 target_link_libraries(test_mqtt_aws PRIVATE host_stubs ${CHECK_LIBS})
-target_include_directories(test_mqtt_aws PRIVATE ${CHECK_INCLUDE_DIRS})
 
 if(NOT MSVC)
     target_compile_options(test_mqtt_aws PRIVATE ${CHECK_CFLAGS_OTHER})
@@ -83,10 +81,7 @@ add_executable(test_sensor_pipeline
     ../../components/mqtt-aws/mqtt-aws.c
 )
 
-# 🚀 SOLUCIÓN: Agregamos target_link_directories para que Visual Studio sepa DÓNDE buscar la librería
-target_link_directories(test_sensor_pipeline PRIVATE ${CHECK_LIBRARY_DIRS})
 target_link_libraries(test_sensor_pipeline PRIVATE host_stubs ${CHECK_LIBS})
-target_include_directories(test_sensor_pipeline PRIVATE ${CHECK_INCLUDE_DIRS})
 
 if(NOT MSVC)
     target_compile_options(test_sensor_pipeline PRIVATE ${CHECK_CFLAGS_OTHER})
