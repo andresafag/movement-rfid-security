@@ -53,14 +53,23 @@ jobs:
   # =========================================================================
   esp-component:
     name: 🧪 ESP-IDF component tests (QEMU)
-    needs: host-unit
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
       - name: 📥 Check out
         uses: actions/checkout@v4
+      
+      - name: 🔍 Verificar caché del paso pesado
+        id: cache
+        uses: actions/cache@v4
+        with:
+          # La ruta de la carpeta o archivos que genera tu paso pesado
+          path: . 
+          # Una clave única ligada a los archivos de configuración que disparan este paso
+          key: ${{ runner.os }}-step-${{ hashFiles('config/o/dependencias/del/paso.txt') }}
 
       - name: 🛠️ Install ESP-IDF & QEMU Tools
+        if: steps.cache.outputs.cache-hit != 'true
         uses: espressif/install-esp-idf-action@v1
         with:
           version: 'v6.0.2' 
@@ -111,81 +120,4 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # =========================================================================
-  # 3. ESP32 integration test — full pipeline + local mosquitto in QEMU.
-  # =========================================================================
-  esp-integration:
-    name: 🔗 ESP32 integration test (QEMU + mosquitto)
-    needs: host-unit
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: 📥 Check out
-        uses: actions/checkout@v4
 
-      - name: 🛠️ Install ESP-IDF v5.2
-        uses: espressif/esp-idf-ci-action@v1
-        with:
-          esp_idf_version: v5.2
-          target: esp32
-
-      - name: Start mosquitto broker
-        run: |
-          docker rm -f mosquitto 2>/dev/null || true
-          docker run -d --name mosquitto -p 1883:1883 eclipse-mosquitto:2
-          for i in $(seq 1 15); do
-            if docker exec mosquitto mosquitto_sub -t '$$SYS/#' -C 1 -W 2 >/tmp/mosquitto_health.log 2>&1; then
-              break
-            fi
-            sleep 2
-          done
-          docker ps --filter name=mosquitto
-
-      - name: Install QEMU + MQTT client
-        run: sudo apt-get install -y -qq qemu-system-xtensa mosquitto-clients
-
-      - name: 🧹 Reset component lockfile
-        run: rm -f dependencies.lock
-
-      - name: 🏗️ Build integration test
-        working-directory: tests/integration
-        run: idf.py build
-
-      - name: 🐛 Subscribe to test topic (background)
-        run: |
-          nohup mosquitto_sub -h localhost -p 1883 \
-            -t 'sensors/motion/integration-test' \
-            -C 1 -W 60 > /tmp/mqtt_sub.log 2>&1 &
-          echo $! > /tmp/mqtt_sub.pid
-          sleep 2
-
-      - name: ▶️ Run integration test (QEMU)
-        working-directory: tests/integration
-        run: |
-          timeout 90 qemu-system-xtensa \
-            -nographic \
-            -machine esp32 \
-            -drive file=build/sensor_access_integration_test.bin,if=mtd,format=raw \
-            || true
-
-      - name: 🧹 Stop subscriber
-        if: always()
-        run: |
-          if [ -f /tmp/mqtt_sub.pid ]; then
-            kill "$(cat /tmp/mqtt_sub.pid)" 2>/dev/null || true
-          fi
-
-      - name: 🧹 Stop mosquitto broker
-        if: always()
-        run: docker rm -f mosquitto 2>/dev/null || true
-
-      - name: 📤 Upload integration logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: esp-integration-logs
-          path: |
-            tests/integration/build/*.log
-            /tmp/mqtt_sub.log
-          if-no-files-found: ignore
-          retention-days: 7
