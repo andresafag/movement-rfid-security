@@ -3253,6 +3253,57 @@ CONFIG_WL_SECTOR_SIZE_4096=y
 # default:
 CONFIG_WL_SECTOR_SIZE=4096
 # end of Wear Levelling
+
+#
+# cJSON
+#
+# default:
+CONFIG_CJSON_NESTING_LIMIT=1000
+# default:
+CONFIG_CJSON_CIRCULAR_LIMIT=10000
+# end of cJSON
+
+#
+# ESP-MQTT Configurations
+#
+# default:
+CONFIG_MQTT_PROTOCOL_311=y
+# default:
+# CONFIG_MQTT_PROTOCOL_5 is not set
+# default:
+CONFIG_MQTT_TRANSPORT_SSL=y
+# default:
+CONFIG_MQTT_TRANSPORT_WEBSOCKET=y
+# default:
+CONFIG_MQTT_TRANSPORT_WEBSOCKET_SECURE=y
+# default:
+# CONFIG_MQTT_MSG_ID_INCREMENTAL is not set
+# default:
+# CONFIG_MQTT_SKIP_PUBLISH_IF_DISCONNECTED is not set
+# default:
+# CONFIG_MQTT_REPORT_DELETED_MESSAGES is not set
+# default:
+# CONFIG_MQTT_USE_CUSTOM_CONFIG is not set
+# default:
+# CONFIG_MQTT_TASK_CORE_SELECTION_ENABLED is not set
+# default:
+# CONFIG_MQTT_CUSTOM_OUTBOX is not set
+# end of ESP-MQTT Configurations
+
+#
+# Network Provisioning Manager
+#
+# default:
+CONFIG_NETWORK_PROV_NETWORK_TYPE_WIFI=y
+# default:
+CONFIG_NETWORK_PROV_SCAN_MAX_ENTRIES=16
+# default:
+CONFIG_NETWORK_PROV_AUTOSTOP_TIMEOUT=30
+# default:
+CONFIG_NETWORK_PROV_WIFI_STA_ALL_CHANNEL_SCAN=y
+# default:
+# CONFIG_NETWORK_PROV_WIFI_STA_FAST_SCAN is not set
+# end of Network Provisioning Manager
 # end of Component config
 
 # default:

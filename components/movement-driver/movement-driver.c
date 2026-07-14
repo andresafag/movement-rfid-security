@@ -8,9 +8,8 @@
 #include "driver/gpio.h"
 #include "esp_log.h"
 
-// Pin Definitions for DOIT ESP32 DevKit V1 (30-Pin)
-#define PIR_SENSOR_GPIO        GPIO_NUM_27
-#define BLUE_LED_PIN           GPIO_NUM_25
+#define PIR_SENSOR_GPIO GPIO_NUM_27
+#define BLUE_LED_PIN  GPIO_NUM_25
 #define ESP_INTR_FLAG_DEFAULT  0
 
 static const char *TAG = "PIR_SYSTEM";
@@ -28,6 +27,7 @@ static void IRAM_ATTR pir_isr_handler(void* arg) {
 		portYIELD_FROM_ISR();
 	}
 }
+
 
 // Background Task - Processes the queue items outside of the critical ISR context
 static void pir_processing_task(void* arg) {
