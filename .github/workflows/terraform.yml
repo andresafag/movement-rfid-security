@@ -2,6 +2,11 @@ name: Terraform
 
 on:
   workflow_call:
+    secrets:
+      AWS_ROLE_ARN:
+        required: true
+      TF_LOCK_TABLE:
+        required: true
     inputs:
       environment:
         description: '🌍 Environment'
@@ -13,15 +18,22 @@ on:
         required: false
         default: 'apply'
         type: string
+      AWS_REGION:
+        description: '🟧 AWS region'
+        required: true
+        type: string
+      TF_VAR_state_bucket_name:
+        description: '🟦 Terraform state bucket name'
+        required: true
+        type: string
       confirm_destroy:
         description: '⚠️ Type "destroy" to confirm a destroy (ignored otherwise)'
         required: false
         default: ''
         type: string
-      tf_version:
+      TF_VERSION:
         description: '🟦 Terraform version (optional override)'
-        required: false
-        default: ''
+        required: true
         type: string
 
 # Serialise by environment so we never run two plans/applies against
@@ -36,15 +48,6 @@ permissions:
   contents: read
   pull-requests: write
   actions: read
-
-# Shared env so jobs stay in sync.
-env:
-  TF_VERSION: '1.9.8'
-  TF_IN_AUTOMATION: 'true'
-  TF_INPUT: '0'
-  AWS_REGION: ${{ secrets.AWS_REGION }}
-  TF_VAR_project_name: sensor-access
-  TF_VAR_state_bucket_name: ${{ secrets.TF_STATE_BUCKET }}
 
 jobs:
   # =========================================================================
@@ -62,7 +65,7 @@ jobs:
       - name: 🟦 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: ${{ env.TF_VERSION }}
+          terraform_version: ${{ inputs.TF_VERSION }}
           terraform_wrapper: false
 
       - name: 🪪 Assume AWS role via OIDC
@@ -70,7 +73,7 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-session-name: gha-terraform-${{ github.run_id }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ inputs.AWS_REGION }}
 
       - name: ☁️ Verify identity
         run: aws sts get-caller-identity
@@ -87,9 +90,9 @@ jobs:
         working-directory: infrastructure
         run: |
           terraform init -input=false \
-            -backend-config="bucket=${{ env.TF_VAR_state_bucket_name }}" \
+            -backend-config="bucket=${{ inputs.TF_VAR_state_bucket_name }}" \
             -backend-config="key=sensor-access/terraform.tfstate" \
-            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="region=${{ inputs.AWS_REGION }}" \
             -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}" \
             -backend-config="encrypt=true"
 
@@ -133,7 +136,7 @@ jobs:
       - name: 🟦 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: ${{ env.TF_VERSION }}
+          terraform_version: ${{ inputs.TF_VERSION }}
           terraform_wrapper: false
 
       - name: 💾 Cache .terraform
@@ -149,16 +152,16 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-session-name: gha-terraform-plan-${{ github.run_id }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ inputs.AWS_REGION }}
 
       - name: 🔍 terraform init (no backend — uses restored cache for providers only)
         working-directory: infrastructure
         run: |
           # Init is needed to re-attach the backend; providers already cached.
           terraform init -input=false \
-            -backend-config="bucket=${{ env.TF_VAR_state_bucket_name }}" \
+            -backend-config="bucket=${{ inputs.TF_VAR_state_bucket_name }}" \
             -backend-config="key=sensor-access/terraform.tfstate" \
-            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="region=${{ inputs.AWS_REGION }}" \
             -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}" \
             -backend-config="encrypt=true"
 
@@ -192,7 +195,7 @@ jobs:
       - name: 🟦 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: ${{ env.TF_VERSION }}
+          terraform_version: ${{ inputs.TF_VERSION }}
           terraform_wrapper: false
 
       - name: 💾 Cache .terraform
@@ -208,15 +211,15 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-session-name: gha-terraform-apply-${{ github.run_id }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ inputs.AWS_REGION }}
 
       - name: 🔍 terraform init
         working-directory: infrastructure
         run: |
           terraform init -input=false \
-            -backend-config="bucket=${{ env.TF_VAR_state_bucket_name }}" \
+            -backend-config="bucket=${{ inputs.TF_VAR_state_bucket_name }}" \
             -backend-config="key=sensor-access/terraform.tfstate" \
-            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="region=${{ inputs.AWS_REGION }}" \
             -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}" \
             -backend-config="encrypt=true"
 
@@ -286,7 +289,7 @@ jobs:
       - name: 🟦 Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: ${{ env.TF_VERSION }}
+          terraform_version: ${{ inputs.TF_VERSION }}
           terraform_wrapper: false
 
       - name: 🪪 Assume AWS role via OIDC
@@ -294,15 +297,15 @@ jobs:
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           role-session-name: gha-terraform-destroy-${{ github.run_id }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ inputs.AWS_REGION }}
 
       - name: 🔍 terraform init
         working-directory: infrastructure
         run: |
           terraform init -input=false \
-            -backend-config="bucket=${{ env.TF_VAR_state_bucket_name }}" \
+            -backend-config="bucket=${{ inputs.TF_VAR_state_bucket_name }}" \
             -backend-config="key=sensor-access/terraform.tfstate" \
-            -backend-config="region=${{ env.AWS_REGION }}" \
+            -backend-config="region=${{ inputs.AWS_REGION }}" \
             -backend-config="dynamodb_table=${{ secrets.TF_LOCK_TABLE }}" \
             -backend-config="encrypt=true"
 
