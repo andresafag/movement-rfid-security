@@ -38,7 +38,10 @@ void mqtt_send_payload(void *handler_args, esp_event_base_t base, int32_t event_
 	 }
 
 	 char payload[256];
+	 putenv("TZ=COT5");
+	tzset(); // Apply the new timezone
 	 time_t currentTime;
+	 
 	 
 	 // 1. Grab the current calendar time
 	 time(&currentTime);

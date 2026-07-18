@@ -55,6 +55,10 @@ jobs:
     name: 🧪 ESP-IDF component tests (QEMU)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash -l {0}
+			
     steps:
       - name: 📥 Check out
         uses: actions/checkout@v4
@@ -62,14 +66,13 @@ jobs:
       - name: 🔍 Verificar caché del paso pesado
         id: cache
         uses: actions/cache@v4
-        with:
-          # La ruta de la carpeta o archivos que genera tu paso pesado
-          path: . 
-          # Una clave única ligada a los archivos de configuración que disparan este paso
-          key: ${{ runner.os }}-step-${{ hashFiles('config/o/dependencias/del/paso.txt') }}
+        with:      # Cachamos la carpeta donde el action instala el IDF y las herramientas (.espressif)
+          path: |
+            ~/.espressif
+            ~/opt/esp
+          key: ${{ runner.os }}-esp-idf-v6.0.2-qemu
 
       - name: 🛠️ Install ESP-IDF & QEMU Tools
-        if: steps.cache.outputs.cache-hit != 'true'
         uses: espressif/install-esp-idf-action@v1
         with:
           version: 'v6.0.2' 
