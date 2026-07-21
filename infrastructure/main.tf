@@ -41,7 +41,7 @@ module "iot_rules" {
 }
 
 module "s3" {
-  source = "./modules/s3"
+  source                                          = "./modules/s3"
   aws_lambda_permission_allow_s3_to_invoke_lambda = module.lambda_function.lambda_function_name
 }
 
@@ -53,8 +53,8 @@ module "eventbridge" {
 
   rules = {
     s3_upload_rule = {
-      description   = "Capture all detection data from esp32 movement sensor"
-      enabled       = true
+      description = "Capture all detection data from esp32 movement sensor"
+      enabled     = true
       event_pattern = jsonencode({
         source      = ["aws.s3"]
         detail-type = ["Firmware uploaded"]
@@ -66,13 +66,13 @@ module "eventbridge" {
       })
     }
   }
-  
+
 
   targets = {
     s3_upload_rule = [
       {
-        name            = "send-data-to esp32-movement-sensor"
-        arn             = module.lambda_function.lambda_function_arn
+        name = "send-data-to esp32-movement-sensor"
+        arn  = module.lambda_function.lambda_function_arn
       }
     ]
   }
@@ -83,8 +83,8 @@ module "eventbridge" {
 }
 
 module "lambda_function" {
-  source = "terraform-aws-modules/lambda/aws"
-  version = "~> 6.0"
+  source                                  = "terraform-aws-modules/lambda/aws"
+  version                                 = "~> 6.0"
   create_current_version_allowed_triggers = false
 
   function_name = "firmware-sensor-movement-trigger"
@@ -101,8 +101,8 @@ module "lambda_function" {
   attach_policy_statements = true
   policy_statements = {
     s3_read = {
-      effect    = "Allow"
-      actions   = ["s3:GetObject", "s3:ListBucket"]
+      effect  = "Allow"
+      actions = ["s3:GetObject", "s3:ListBucket"]
       resources = [
         "${module.s3.aws_s3_bucket_firmware_arn}/",
         "${module.s3.aws_s3_bucket_firmware_arn}/*"
