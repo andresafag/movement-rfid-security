@@ -43,6 +43,7 @@ module "iot_rules" {
 module "s3" {
   source                                          = "./modules/s3"
   aws_lambda_permission_allow_s3_to_invoke_lambda = module.lambda_function.lambda_function_name
+  firmware_bucket_name                            = var.firmware_bucket_name
 }
 
 
