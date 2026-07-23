@@ -182,7 +182,6 @@ resource "aws_iot_policy" "device" {
   policy = data.aws_iam_policy_document.iot_device_policy.json
 }
 
-
 resource "aws_iam_role" "iot-ota-role" {
   name = "${local.name_prefix}-iot-ota-role"
 
